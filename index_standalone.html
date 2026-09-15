@@ -215,7 +215,7 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
 
 // ------------------- config.js -------------------
 // ضع هنا رابط Apps Script الجديد بعد النشر (Deploy > New deployment)
-const API_URL = 'https://script.google.com/macros/s/AKfycbwbyEd56oJfPG-RJHwWh9e2mEI9dTdykiOPTmons9yDEIPPnYfMz3jCyxzeDdH5ny4c/exec';
+const API_URL = 'PASTE_YOUR_NEW_APPS_SCRIPT_EXEC_URL_HERE';
 
 const ROLES = {
   SYSTEM_ADMIN: 'system_admin',
@@ -307,8 +307,13 @@ const Api = {
     const token = Session.getToken();
     const body = { action, token, ...payload };
     try {
-      const res = await fetch(API_URL, {
+      const cacheBustUrl = API_URL + (API_URL.indexOf('?') === -1 ? '?' : '&') + '_ts=' + Date.now();
+      const res = await fetch(cacheBustUrl, {
         method: 'POST',
+        mode: 'cors',
+        cache: 'no-store',
+        redirect: 'follow',
+        credentials: 'omit',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(body)
       });
