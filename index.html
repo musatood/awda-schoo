@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام مدرسة العودة المتكامل — المرحلة 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="p-2 md:p-8">
+
+<div id="loginOverlay" class="fixed inset-0 bg-blue-900 z-[10000] flex justify-center items-center flex-col p-4">
+    <div class="bg-white p-8 rounded-3xl w-full max-w-md text-center shadow-2xl">
+        <h2 class="text-2xl font-black text-blue-900 mb-6">نظام مدرسة العودة</h2>
+        <input type="text" id="userInput" placeholder="اسم المستخدم" class="text-center border-2">
+        <input type="password" id="passInput" placeholder="كلمة المرور" class="text-center border-2">
+        <button id="loginBtn" onclick="handleLoginSubmit()" class="btn bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-black py-4 mt-2">دخول 🔒</button>
+        <p id="loginError" class="text-red-500 mt-4 font-bold hidden"></p>
+    </div>
+</div>
+
+<div id="mainApp" class="hidden max-w-6xl mx-auto">
+    <header class="bg-blue-900 text-white p-6 rounded-[2rem] mb-6 flex justify-between items-center shadow-lg border-b-4 border-yellow-500">
+        <div>
+            <h1 class="text-2xl font-black italic">مدرسة العودة</h1>
+            <p class="text-sm opacity-80 font-bold italic text-yellow-400" id="currentUserLabel">—</p>
+        </div>
+        <button onclick="handleLogout()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-bold border border-white/20">خروج</button>
+    </header>
+
+    <div id="tabNav" class="flex gap-2 overflow-x-auto mb-6 p-2 bg-white rounded-2xl shadow-sm border sticky top-2 z-50"></div>
+
+    <div class="section-card min-h-[400px]">
+
+        <div id="t-dashboard">
+            <h3 class="text-xl font-black text-blue-900 mb-4 border-r-4 border-blue-900 pr-2">لوحة التحكم</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-xl text-center">
+                    <span class="block text-xs text-slate-500 font-bold">إجمالي الطلاب</span>
+                    <span id="statTotalStudents" class="text-2xl font-black text-blue-900">0</span>
+                </div>
+                <div class="bg-green-50 p-4 rounded-xl text-center">
+                    <span class="block text-xs text-slate-500 font-bold">عدد المعلمين</span>
+                    <span id="statTotalTeachers" class="text-2xl font-black text-green-700">0</span>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-xl text-center">
+                    <span class="block text-xs text-slate-500 font-bold">عدد الفصول</span>
+                    <span id="statTotalClasses" class="text-2xl font-black text-purple-700">0</span>
+                </div>
+            </div>
+            <p class="text-xs text-slate-400 mt-4 italic">المؤشرات الإضافية (الحضور، المالية، الإنذار المبكر...) ستُضاف في المراحل التالية.</p>
+        </div>
+
+        <div id="t-students" class="hidden">
+            <h3 class="text-xl font-black text-blue-900 mb-4 border-r-4 border-blue-900 pr-2">تسجيل الطلاب</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input id="sName" placeholder="اسم الطالب">
+                <select id="sClass" class="class-select-dynamic">
+                    <option value="" disabled selected>-- اختر الفصل --</option>
+                </select>
+                <button id="addStudentBtn" onclick="StudentsModule.add()" class="btn bg-blue-900 shadow-md">إضافة الطالب</button>
+            </div>
+            <div class="overflow-x-auto mt-6 border rounded-xl">
+                <table>
+                    <thead><tr><th>#</th><th>الطالب</th><th>الفصل</th><th>الحالة</th><th>إجراء</th></tr></thead>
+                    <tbody id="studentsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-parents" class="hidden">
+            <h3 class="text-xl font-black text-teal-700 mb-4 border-r-4 border-teal-700 pr-2">أولياء الأمور</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input id="pName" placeholder="اسم ولي الأمر">
+                <input id="pPhone" placeholder="رقم الهاتف">
+                <input id="pWhatsapp" placeholder="رقم واتساب (إن اختلف)">
+            </div>
+            <button id="addParentBtn" onclick="ParentsModule.add()" class="btn bg-teal-700 shadow-md">إضافة ولي أمر</button>
+            <div class="overflow-x-auto mt-6 border rounded-xl">
+                <table>
+                    <thead><tr><th>الاسم</th><th>الهاتف</th><th>واتساب</th><th>إجراء</th></tr></thead>
+                    <tbody id="parentsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-teachers" class="hidden">
+            <h3 class="text-xl font-black text-green-700 mb-4 border-r-4 border-green-700 pr-2">المعلمون</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input id="tName" placeholder="اسم المعلم">
+                <input id="tSpecialty" placeholder="التخصص">
+                <input id="tPhone" placeholder="رقم الهاتف">
+            </div>
+            <button id="addTeacherBtn" onclick="TeachersModule.add()" class="btn bg-green-700 shadow-md">إضافة معلم</button>
+            <div class="overflow-x-auto mt-6 border rounded-xl">
+                <table>
+                    <thead><tr><th>الاسم</th><th>التخصص</th><th>الهاتف</th></tr></thead>
+                    <tbody id="teachersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-classes" class="hidden">
+            <h3 class="text-xl font-black text-purple-700 mb-4 border-r-4 border-purple-700 pr-2">الفصول</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input id="cName" placeholder="اسم الفصل">
+                <input id="cStage" placeholder="المرحلة (ابتدائي/متوسط/ثانوي...)">
+            </div>
+            <button id="addClassBtn" onclick="ClassesModule.add()" class="btn bg-purple-700 shadow-md">إضافة فصل</button>
+            <div class="overflow-x-auto mt-6 border rounded-xl">
+                <table>
+                    <thead><tr><th>الفصل</th><th>المرحلة</th><th>معلم الفصل</th></tr></thead>
+                    <tbody id="classesTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-users" class="hidden">
+            <h3 class="text-xl font-black text-red-700 mb-4 border-r-4 border-red-700 pr-2">إدارة حسابات الدخول</h3>
+            <p class="text-sm text-slate-500 italic">إنشاء حسابات المعلمين/الطلاب/أولياء الأمور سيُفعَّل بواجهة كاملة في المرحلة القادمة بعد ربطها بقوائم المعلمين/الطلاب/أولياء الأمور.</p>
+        </div>
+
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/students.js"></script>
+<script src="js/parents.js"></script>
+<script src="js/teachers.js"></script>
+<script src="js/classes.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

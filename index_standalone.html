@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام مدرسة العودة المتكامل</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Amiri:wght@700&display=swap" rel="stylesheet">
+<style>
+/* ===================== أساسيات ===================== */
+:root {
+  --navy: #0f2557;
+  --navy-deep: #0a1b40;
+  --gold: #c9973f;
+  --gold-light: #e0b56b;
+}
+body { font-family: 'Tajawal', sans-serif; background: #f4f6fa; margin: 0; }
+.font-display { font-family: 'Amiri', serif; }
+.tab-active { background: var(--navy) !important; color: white !important; box-shadow: 0 4px 12px rgba(15,37,87,0.3); }
+.section-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); margin-bottom: 20px; }
+.btn { padding: 12px; border-radius: 12px; width: 100%; color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+input, select, textarea { border: 1px solid #cbd5e1; padding: 10px; margin-bottom: 10px; width: 100%; border-radius: 10px; outline: none; box-sizing: border-box; display: block; font-family: inherit; }
+input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,151,63,0.15); }
+table { width: 100%; text-align: center; border-collapse: collapse; margin-top: 15px; }
+th { background: #f8fafc; padding: 12px; border-bottom: 2px solid #e2e8f0; font-weight: 900; }
+td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+.animate-fade-in { animation: fadeIn 0.25s ease-in; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===================== شاشة الدخول ===================== */
+#loginOverlay { position: fixed; inset: 0; z-index: 10000; display: flex; background: white; }
+.login-brand {
+  flex: 1 1 46%;
+  background: linear-gradient(160deg, var(--navy) 0%, var(--navy-deep) 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 48px 32px;
+  color: white;
+  text-align: center;
+}
+.login-brand::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(45deg, rgba(201,151,63,0.08) 25%, transparent 25%, transparent 75%, rgba(201,151,63,0.08) 75%),
+    linear-gradient(45deg, rgba(201,151,63,0.08) 25%, transparent 25%, transparent 75%, rgba(201,151,63,0.08) 75%);
+  background-size: 56px 56px;
+  background-position: 0 0, 28px 28px;
+  opacity: 0.6;
+}
+.login-brand-content { position: relative; z-index: 1; max-width: 340px; }
+.login-brand-badge {
+  width: 84px; height: 84px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(224,181,107,0.5);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px; font-size: 36px;
+}
+.login-form-side { flex: 1 1 54%; display: flex; align-items: center; justify-content: center; padding: 32px; }
+.login-form-card { width: 100%; max-width: 380px; }
+.login-field label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+.login-field input { margin-bottom: 18px; padding: 13px 14px; }
+@media (max-width: 820px) {
+  #loginOverlay { flex-direction: column; overflow-y: auto; }
+  .login-brand { flex: 0 0 auto; padding: 32px 24px; }
+  .login-brand-badge { width: 64px; height: 64px; font-size: 26px; margin-bottom: 14px; }
+}
+
+/* ===================== Toast ===================== */
+#toastContainer { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 20000; display: flex; flex-direction: column; align-items: center; }
+</style>
+</head>
+<body class="p-2 md:p-8">
+
+<!-- ===================== شاشة الدخول ===================== -->
+<div id="loginOverlay">
+  <div class="login-brand">
+    <div class="login-brand-content">
+      <div class="login-brand-badge">🏫</div>
+      <h1 class="font-display text-4xl font-bold mb-3">مدرسة العودة</h1>
+      <p class="text-sm text-white/70 leading-7">نظام الإدارة المتكامل لمتابعة الطلاب والمعلمين وأولياء الأمور والشؤون المالية والأكاديمية في مكان واحد.</p>
+    </div>
+  </div>
+
+  <div class="login-form-side">
+    <div class="login-form-card">
+      <h2 class="text-xl font-black text-slate-800 mb-1">تسجيل الدخول</h2>
+      <p class="text-sm text-slate-400 mb-8">أدخل بيانات حسابك للمتابعة</p>
+
+      <div class="login-field">
+        <label for="userInput">اسم المستخدم</label>
+        <input type="text" id="userInput" autocomplete="username">
+      </div>
+      <div class="login-field">
+        <label for="passInput">كلمة المرور</label>
+        <input type="password" id="passInput" autocomplete="current-password">
+      </div>
+
+      <button id="loginBtn" onclick="handleLoginSubmit()" class="btn mt-2" style="background: var(--gold); color: var(--navy-deep);">دخول 🔒</button>
+      <p id="loginError" class="text-red-500 mt-4 font-bold text-sm hidden"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== التطبيق الرئيسي ===================== -->
+<div id="mainApp" class="hidden max-w-6xl mx-auto">
+    <header class="text-white p-6 rounded-[2rem] mb-6 flex justify-between items-center shadow-lg" style="background: var(--navy); border-bottom: 4px solid var(--gold);">
+        <div>
+            <h1 class="text-2xl font-black font-display">مدرسة العودة</h1>
+            <p class="text-sm opacity-80 font-bold" id="currentUserLabel" style="color: var(--gold-light);">—</p>
+        </div>
+        <button onclick="handleLogout()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-bold border border-white/20">خروج</button>
+    </header>
+
+    <div id="tabNav" class="flex gap-2 overflow-x-auto mb-6 p-2 bg-white rounded-2xl shadow-sm border sticky top-2 z-50"></div>
+
+    <div class="section-card min-h-[400px]">
+
+        <div id="t-dashboard">
+            <h3 class="text-xl font-black mb-4 border-r-4 pr-2" style="color: var(--navy); border-color: var(--navy);">لوحة التحكم</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-xl text-center">
+                    <span class="block text-xs text-slate-500 font-bold">إجمالي الطلاب</span>
+                    <span id="statTotalStudents" class="text-2xl font-black" style="color: var(--navy);">0</span>
+                </div>
+                <div class="bg-green-50 p-4 rounded-xl text-center">
+                    <span class="block text-xs text-slate-500 font-bold">عدد المعلمين</span>
+                    <span id="statTotalTeachers" class="text-2xl font-black text-green-700">0</span>
+                </div>
+                <div class="bg-amber-50 p-4 rounded-xl text-center">
+                    <span class="block text-xs text-slate-500 font-bold">عدد الفصول</span>
+                    <span id="statTotalClasses" class="text-2xl font-black" style="color: var(--gold);">0</span>
+                </div>
+            </div>
+            <p class="text-xs text-slate-400 mt-4 italic">المؤشرات الإضافية (الحضور، المالية، الإنذار المبكر...) ستُضاف في المراحل التالية.</p>
+        </div>
+
+        <div id="t-students" class="hidden">
+            <h3 class="text-xl font-black mb-4 border-r-4 pr-2" style="color: var(--navy); border-color: var(--navy);">تسجيل الطلاب</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input id="sName" placeholder="اسم الطالب">
+                <select id="sClass" class="class-select-dynamic">
+                    <option value="" disabled selected>-- اختر الفصل --</option>
+                </select>
+                <button id="addStudentBtn" onclick="StudentsModule.add()" class="btn" style="background: var(--navy);">إضافة الطالب</button>
+            </div>
+            <div class="overflow-x-auto mt-6 border rounded-xl">
+                <table>
+                    <thead><tr><th>#</th><th>الطالب</th><th>الفصل</th><th>الحالة</th><th>إجراء</th></tr></thead>
+                    <tbody id="studentsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-parents" class="hidden">
+            <h3 class="text-xl font-black text-teal-700 mb-4 border-r-4 border-teal-700 pr-2">أولياء الأمور</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input id="pName" placeholder="اسم ولي الأمر">
+                <input id="pPhone" placeholder="رقم الهاتف">
+                <input id="pWhatsapp" placeholder="رقم واتساب (إن اختلف)">
+            </div>
+            <button id="addParentBtn" onclick="ParentsModule.add()" class="btn bg-teal-700">إضافة ولي أمر</button>
+            <div class="overflow-x-auto mt-6 border rounded-xl">
+                <table>
+                    <thead><tr><th>الاسم</th><th>الهاتف</th><th>واتساب</th><th>إجراء</th></tr></thead>
+                    <tbody id="parentsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-teachers" class="hidden">
+            <h3 class="text-xl font-black text-green-700 mb-4 border-r-4 border-green-700 pr-2">المعلمون</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input id="tName" placeholder="اسم المعلم">
+                <input id="tSpecialty" placeholder="التخصص">
+                <input id="tPhone" placeholder="رقم الهاتف">
+            </div>
+            <button id="addTeacherBtn" onclick="TeachersModule.add()" class="btn bg-green-700">إضافة معلم</button>
+            <div class="overflow-x-auto mt-6 border rounded-xl">
+                <table>
+                    <thead><tr><th>الاسم</th><th>التخصص</th><th>الهاتف</th></tr></thead>
+                    <tbody id="teachersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-classes" class="hidden">
+            <h3 class="text-xl font-black text-purple-700 mb-4 border-r-4 border-purple-700 pr-2">الفصول</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input id="cName" placeholder="اسم الفصل">
+                <input id="cStage" placeholder="المرحلة (ابتدائي/متوسط/ثانوي...)">
+            </div>
+            <button id="addClassBtn" onclick="ClassesModule.add()" class="btn bg-purple-700">إضافة فصل</button>
+            <div class="overflow-x-auto mt-6 border rounded-xl">
+                <table>
+                    <thead><tr><th>الفصل</th><th>المرحلة</th><th>معلم الفصل</th></tr></thead>
+                    <tbody id="classesTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-users" class="hidden">
+            <h3 class="text-xl font-black text-red-700 mb-4 border-r-4 border-red-700 pr-2">إدارة حسابات الدخول</h3>
+            <p class="text-sm text-slate-500 italic">إنشاء حسابات المعلمين/الطلاب/أولياء الأمور سيُفعَّل بواجهة كاملة في المرحلة القادمة.</p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ============================================================
+// ملف واحد مدمج (لتفادي مشاكل المسارات عند فتح الملف مباشرة file://)
+// كل قسم أدناه يقابل ملفًا مستقلاً في النسخة "Modular" الموجودة داخل مجلدي css/ و js/
+// ============================================================
+
+// ------------------- config.js -------------------
+// ضع هنا رابط Apps Script الجديد بعد النشر (Deploy > New deployment)
+const API_URL = 'https://script.google.com/macros/s/AKfycbwDxWxr52Xd6muT5RTQHAnULgaYdhsIgTTz5VV6oNAnTda51GJ_8Gvp2VZsmUMb0gm9/exec';
+
+const ROLES = {
+  SYSTEM_ADMIN: 'system_admin',
+  ADMIN: 'admin',
+  TEACHER: 'teacher',
+  STUDENT: 'student',
+  PARENT: 'parent'
+};
+
+const ROLE_LABELS = {
+  system_admin: 'مدير النظام',
+  admin: 'الإدارة',
+  teacher: 'معلم',
+  student: 'طالب',
+  parent: 'ولي أمر'
+};
+
+const TAB_PERMISSIONS = {
+  dashboard: [ROLES.SYSTEM_ADMIN, ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT],
+  students: [ROLES.SYSTEM_ADMIN, ROLES.ADMIN, ROLES.TEACHER],
+  parents: [ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+  teachers: [ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+  classes: [ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+  users: [ROLES.SYSTEM_ADMIN]
+};
+</script>
+<script>
+// ------------------- utils.js -------------------
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function showToast(message, type = 'info') {
+  const container = getToastContainer();
+  const toast = document.createElement('div');
+  const colors = { info: 'bg-blue-900', success: 'bg-green-700', error: 'bg-red-600', warning: 'bg-yellow-600' };
+  toast.className = `${colors[type] || colors.info} text-white px-4 py-3 rounded-xl shadow-lg mb-2 font-bold text-sm animate-fade-in`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+function getToastContainer() {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    document.body.appendChild(container);
+  }
+  return container;
+}
+
+function confirmAction(message) { return window.confirm(message); }
+
+function setLoading(el, isLoading, loadingText = 'جارٍ التحميل...') {
+  if (!el) return;
+  if (isLoading) {
+    el.dataset.originalContent = el.innerHTML;
+    el.innerHTML = `<span class="inline-block animate-pulse">${loadingText}</span>`;
+    el.disabled = true;
+  } else {
+    if (el.dataset.originalContent) el.innerHTML = el.dataset.originalContent;
+    el.disabled = false;
+  }
+}
+
+function renderEmptyState(container, message) {
+  container.innerHTML = `<tr><td colspan="10" class="text-center text-slate-400 py-8 italic">${escapeHtml(message)}</td></tr>`;
+}
+</script>
+<script>
+// ------------------- api.js -------------------
+const Api = {
+  async call(action, payload = {}) {
+    if (!API_URL || API_URL.indexOf('PASTE_YOUR') === 0) {
+      showToast('لم يتم ربط النظام بالخادم بعد (API_URL غير معرّف) — راجع خطوات التشغيل في README', 'error');
+      return { status: 'error', message: 'api_not_configured' };
+    }
+    const token = Session.getToken();
+    const body = { action, token, ...payload };
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        showToast('تعذّر الاتصال بالخادم (خطأ ' + res.status + ')', 'error');
+        return { status: 'error', message: 'network_error' };
+      }
+      const data = await res.json();
+      if (data.status === 'error') showToast(data.message || 'حدث خطأ غير متوقع', 'error');
+      return data;
+    } catch (err) {
+      showToast('تعذّر الاتصال بالخادم — تحقق من الإنترنت أو من رابط API_URL', 'error');
+      return { status: 'error', message: err.message };
+    }
+  }
+};
+</script>
+<script>
+// ------------------- auth.js -------------------
+const Session = {
+  KEY: 'awda_session_v1',
+  save(sessionData) { sessionStorage.setItem(this.KEY, JSON.stringify(sessionData)); },
+  get() { const raw = sessionStorage.getItem(this.KEY); return raw ? JSON.parse(raw) : null; },
+  getToken() { const s = this.get(); return s ? s.token : null; },
+  clear() { sessionStorage.removeItem(this.KEY); },
+  isLoggedIn() { return !!this.get(); },
+  getRole() { const s = this.get(); return s ? s.user.role : null; }
+};
+
+async function handleLoginSubmit() {
+  const username = document.getElementById('userInput').value.trim();
+  const password = document.getElementById('passInput').value;
+  const errorEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errorEl.classList.add('hidden');
+
+  if (!username || !password) {
+    errorEl.textContent = 'أدخل اسم المستخدم وكلمة المرور';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  setLoading(btn, true, 'جارٍ التحقق...');
+  const res = await Api.call('login', { username, password });
+  setLoading(btn, false);
+
+  if (res.status !== 'success') {
+    errorEl.textContent = res.message === 'api_not_configured'
+      ? 'النظام غير مرتبط بالخادم بعد — راجع خطوات التشغيل'
+      : (res.message || 'بيانات الدخول غير صحيحة');
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  Session.save({ token: res.token, user: res.user });
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  await App.init();
+}
+
+async function handleLogout() {
+  if (!confirmAction('هل تريد تسجيل الخروج؟')) return;
+  await Api.call('logout');
+  Session.clear();
+  location.reload();
+}
+
+function restoreSessionIfAny() {
+  if (Session.isLoggedIn()) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    return true;
+  }
+  return false;
+}
+
+function canSeeTab(tabName) {
+  const role = Session.getRole();
+  const allowed = TAB_PERMISSIONS[tabName];
+  return allowed ? allowed.indexOf(role) !== -1 : false;
+}
+</script>
+<script>
+// ------------------- students.js -------------------
+const StudentsModule = {
+  data: [],
+  setData(students) { this.data = students || []; },
+  render() {
+    const tbody = document.getElementById('studentsTable');
+    if (!tbody) return;
+    if (this.data.length === 0) { renderEmptyState(tbody, 'لا يوجد طلاب مسجّلون بعد'); return; }
+    tbody.innerHTML = this.data.map((s, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${escapeHtml(s.full_name)}</td>
+        <td>${escapeHtml(s.class_id)}</td>
+        <td>${escapeHtml(s.status)}</td>
+        <td class="flex gap-2 justify-center">
+          <button onclick="StudentsModule.openEdit('${s.student_id}')" class="bg-blue-700 text-white px-3 py-1 rounded-lg text-xs">تعديل</button>
+          <button onclick="StudentsModule.remove('${s.student_id}')" class="bg-red-600 text-white px-3 py-1 rounded-lg text-xs">حذف</button>
+        </td>
+      </tr>`).join('');
+  },
+  async add() {
+    const full_name = document.getElementById('sName').value.trim();
+    const class_id = document.getElementById('sClass').value;
+    const btn = document.getElementById('addStudentBtn');
+    if (!full_name || !class_id) { showToast('أكمل بيانات الطالب (الاسم والفصل)', 'warning'); return; }
+    setLoading(btn, true, 'جارٍ الحفظ...');
+    const res = await Api.call('addStudent', { full_name, class_id });
+    setLoading(btn, false);
+    if (res.status === 'success') {
+      showToast('تم إضافة الطالب بنجاح', 'success');
+      document.getElementById('sName').value = '';
+      document.getElementById('sClass').value = '';
+      await App.reloadData();
+    }
+  },
+  openEdit(studentId) {
+    const s = this.data.find(x => x.student_id === studentId);
+    if (!s) return;
+    const newName = prompt('اسم الطالب:', s.full_name);
+    if (newName === null) return;
+    this.update(studentId, { full_name: newName });
+  },
+  async update(studentId, updates) {
+    const res = await Api.call('updateStudent', { student_id: studentId, ...updates });
+    if (res.status === 'success') { showToast('تم تحديث بيانات الطالب', 'success'); await App.reloadData(); }
+  },
+  async remove(studentId) {
+    const s = this.data.find(x => x.student_id === studentId);
+    if (!confirmAction(`هل أنت متأكد من حذف الطالب "${s ? s.full_name : studentId}"؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+    const res = await Api.call('deleteStudent', { student_id: studentId });
+    if (res.status === 'success') { showToast('تم حذف الطالب', 'success'); await App.reloadData(); }
+  }
+};
+</script>
+<script>
+// ------------------- parents.js -------------------
+const ParentsModule = {
+  data: [],
+  setData(parents) { this.data = parents || []; },
+  render() {
+    const tbody = document.getElementById('parentsTable');
+    if (!tbody) return;
+    if (this.data.length === 0) { renderEmptyState(tbody, 'لا يوجد أولياء أمور مسجّلون بعد'); return; }
+    tbody.innerHTML = this.data.map(p => `
+      <tr>
+        <td>${escapeHtml(p.full_name)}</td>
+        <td>${escapeHtml(p.phone)}</td>
+        <td>${escapeHtml(p.whatsapp)}</td>
+        <td class="flex gap-2 justify-center">
+          <button onclick="ParentsModule.remove('${p.parent_id}')" class="bg-red-600 text-white px-3 py-1 rounded-lg text-xs">حذف</button>
+        </td>
+      </tr>`).join('');
+  },
+  async add() {
+    const full_name = document.getElementById('pName').value.trim();
+    const phone = document.getElementById('pPhone').value.trim();
+    const whatsapp = document.getElementById('pWhatsapp').value.trim() || phone;
+    const btn = document.getElementById('addParentBtn');
+    if (!full_name || !phone) { showToast('أكمل بيانات ولي الأمر (الاسم والهاتف)', 'warning'); return; }
+    setLoading(btn, true, 'جارٍ الحفظ...');
+    const res = await Api.call('addParent', { full_name, phone, whatsapp });
+    setLoading(btn, false);
+    if (res.status === 'success') {
+      showToast('تم إضافة ولي الأمر بنجاح', 'success');
+      document.getElementById('pName').value = '';
+      document.getElementById('pPhone').value = '';
+      document.getElementById('pWhatsapp').value = '';
+      await App.reloadData();
+    }
+  },
+  async remove(parentId) {
+    if (!confirmAction('هل أنت متأكد من حذف ولي الأمر هذا؟')) return;
+    showToast('حذف أولياء الأمور سيُفعَّل في مرحلة لاحقة لضمان عدم كسر ربطهم بالطلاب', 'info');
+  }
+};
+</script>
+<script>
+// ------------------- teachers.js -------------------
+const TeachersModule = {
+  data: [],
+  setData(teachers) { this.data = teachers || []; },
+  render() {
+    const tbody = document.getElementById('teachersTable');
+    if (!tbody) return;
+    if (this.data.length === 0) { renderEmptyState(tbody, 'لا يوجد معلمون مسجّلون بعد'); return; }
+    tbody.innerHTML = this.data.map(t => `
+      <tr><td>${escapeHtml(t.full_name)}</td><td>${escapeHtml(t.specialty)}</td><td>${escapeHtml(t.phone)}</td></tr>`).join('');
+  },
+  async add() {
+    const full_name = document.getElementById('tName').value.trim();
+    const specialty = document.getElementById('tSpecialty').value.trim();
+    const phone = document.getElementById('tPhone').value.trim();
+    const btn = document.getElementById('addTeacherBtn');
+    if (!full_name) { showToast('أدخل اسم المعلم', 'warning'); return; }
+    setLoading(btn, true, 'جارٍ الحفظ...');
+    const res = await Api.call('addTeacher', { full_name, specialty, phone });
+    setLoading(btn, false);
+    if (res.status === 'success') {
+      showToast('تم إضافة المعلم بنجاح', 'success');
+      document.getElementById('tName').value = '';
+      document.getElementById('tSpecialty').value = '';
+      document.getElementById('tPhone').value = '';
+      await App.reloadData();
+    }
+  }
+};
+</script>
+<script>
+// ------------------- classes.js -------------------
+const ClassesModule = {
+  data: [],
+  setData(classes) { this.data = classes || []; },
+  render() {
+    const tbody = document.getElementById('classesTable');
+    if (!tbody) return;
+    if (this.data.length === 0) { renderEmptyState(tbody, 'لا توجد فصول مضافة بعد'); return; }
+    tbody.innerHTML = this.data.map(c => `
+      <tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.stage)}</td><td>${escapeHtml(c.homeroom_teacher_id)}</td></tr>`).join('');
+    this.fillClassSelects();
+  },
+  fillClassSelects() {
+    document.querySelectorAll('.class-select-dynamic').forEach(select => {
+      const currentValue = select.value;
+      select.innerHTML = '<option value="" disabled selected>-- اختر الفصل --</option>' +
+        this.data.map(c => `<option value="${c.class_id}">${escapeHtml(c.name)}</option>`).join('');
+      if (currentValue) select.value = currentValue;
+    });
+  },
+  async add() {
+    const name = document.getElementById('cName').value.trim();
+    const stage = document.getElementById('cStage').value.trim();
+    const btn = document.getElementById('addClassBtn');
+    if (!name) { showToast('أدخل اسم الفصل', 'warning'); return; }
+    setLoading(btn, true, 'جارٍ الحفظ...');
+    const res = await Api.call('addClass', { name, stage });
+    setLoading(btn, false);
+    if (res.status === 'success') {
+      showToast('تم إضافة الفصل بنجاح', 'success');
+      document.getElementById('cName').value = '';
+      document.getElementById('cStage').value = '';
+      await App.reloadData();
+    }
+  }
+};
+</script>
+<script>
+// ------------------- app.js -------------------
+const App = {
+  async init() {
+    this.buildNav();
+    await this.reloadData();
+    this.showTab('dashboard');
+  },
+  buildNav() {
+    const nav = document.getElementById('tabNav');
+    const role = Session.getRole();
+    const tabsMeta = [
+      { key: 'dashboard', label: 'لوحة التحكم' },
+      { key: 'students', label: 'الطلاب' },
+      { key: 'parents', label: 'أولياء الأمور' },
+      { key: 'teachers', label: 'المعلمون' },
+      { key: 'classes', label: 'الفصول' },
+      { key: 'users', label: 'المستخدمون' }
+    ];
+    nav.innerHTML = tabsMeta.filter(t => canSeeTab(t.key)).map(t =>
+      `<button onclick="App.showTab('${t.key}')" id="b-${t.key}" class="flex-1 py-3 px-6 rounded-xl font-bold text-slate-500 whitespace-nowrap transition-all">${t.label}</button>`
+    ).join('');
+    const userLabel = document.getElementById('currentUserLabel');
+    const session = Session.get();
+    if (userLabel && session) userLabel.textContent = `${session.user.full_name || session.user.username} (${ROLE_LABELS[session.user.role]})`;
+  },
+  showTab(name) {
+    if (!canSeeTab(name)) { showToast('لا تملك صلاحية الوصول لهذا القسم', 'error'); return; }
+    document.querySelectorAll('[id^="t-"]').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById('t-' + name);
+    if (target) target.classList.remove('hidden');
+    document.querySelectorAll('[id^="b-"]').forEach(el => el.classList.remove('tab-active'));
+    const btn = document.getElementById('b-' + name);
+    if (btn) btn.classList.add('tab-active');
+  },
+  async reloadData() {
+    const res = await Api.call('getBootstrapData');
+    if (res.status !== 'success') return;
+    StudentsModule.setData(res.students);
+    ParentsModule.setData(res.parents);
+    TeachersModule.setData(res.teachers);
+    ClassesModule.setData(res.classes);
+    StudentsModule.render();
+    ParentsModule.render();
+    TeachersModule.render();
+    ClassesModule.render();
+    this.renderDashboard(res);
+  },
+  renderDashboard(data) {
+    const el = document.getElementById('statTotalStudents');
+    if (el) el.textContent = (data.students || []).length;
+    const elT = document.getElementById('statTotalTeachers');
+    if (elT) elT.textContent = (data.teachers || []).length;
+    const elC = document.getElementById('statTotalClasses');
+    if (elC) elC.textContent = (data.classes || []).length;
+  }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (restoreSessionIfAny()) App.init();
+});
+</script>
+</body>
+</html>
